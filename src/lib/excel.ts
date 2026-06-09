@@ -5,8 +5,8 @@ import { calculatePermit, normalizeStatus } from "@/lib/calculations";
 import { FIRST_DATA_ROW, HEADER_ROW, WORKBOOK_COLUMNS, WORKBOOK_SHEET_NAME } from "@/lib/workbook-columns";
 
 type ParsedPermit = Omit<Prisma.PermitCreateInput, "rawData" | "formulas"> & {
-  rawData: Prisma.InputJsonValue;
-  formulas: Prisma.InputJsonValue;
+  rawData: string;
+  formulas: string;
 };
 
 const columnLookup = new Map(WORKBOOK_COLUMNS.map((column) => [column.excel, column]));
