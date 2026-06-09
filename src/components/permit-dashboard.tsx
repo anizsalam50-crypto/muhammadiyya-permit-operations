@@ -11,7 +11,8 @@ import {
   FileText,
   RefreshCw,
   Search,
-  Upload
+  Upload,
+  Languages
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -250,6 +251,12 @@ export function PermitDashboard() {
             <p className="mt-1 text-sm font-semibold text-blue-600 dark:text-blue-400">Created by : ANIZ SALAM</p>
           </div>
           <div className="flex flex-wrap gap-2">
+
+            <Button variant="outline">
+              <Languages className="h-4 w-4" />
+              العربية
+            </Button>
+
             <input
               ref={fileInputRef}
               type="file"
