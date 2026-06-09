@@ -138,34 +138,73 @@ function PermitDocumentLink({ permit }: { permit: PermitRow }) {
   );
 }
 
-function AlertList({ title, items, bucket }: { title: string; items: PermitRow[]; bucket: ExpiryBucket }) {
+function AlertList({
+  title,
+  items,
+  bucket
+}: {
+  title: string;
+  items: PermitRow[];
+  bucket: ExpiryBucket;
+}) {
+  const [open, setOpen] = useState(false);
+
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold">{title}</p>
-        <Badge className={badgeClass(bucket)}>{items.length}</Badge>
+      <div
+        className="flex cursor-pointer items-center justify-between"
+        onClick={() => setOpen(!open)}
+      >
+        <p className="text-sm font-semibold">
+          {open ? "▼ " : "▶ "} {title}
+        </p>
+
+        <Badge className={badgeClass(bucket)}>
+          {items.length}
+        </Badge>
       </div>
-      <div className="space-y-2">
-        {items.slice(0, 5).map((permit) => (
-          <Link
-            key={permit.id}
-            href={`/permits/${permit.id}`}
-            className="block rounded-md border bg-background p-3 text-sm transition-colors hover:bg-muted/70"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="truncate font-medium">{permit.permitNumber || permit.permitNumberUsed || "No permit no."}</p>
-                <p className="truncate text-xs text-muted-foreground">{permit.contractorName || "Unspecified contractor"}</p>
-                <p className="truncate text-xs text-muted-foreground">{permit.streetName || "No street name"}</p>
+
+      {open && (
+        <div className="space-y-2">
+          {items.slice(0, 5).map((permit) => (
+            <Link
+              key={permit.id}
+              href={`/permits/${permit.id}`}
+              className="block rounded-md border bg-background p-3 text-sm transition-colors hover:bg-muted/70"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate font-medium">
+                    {permit.permitNumber ||
+                      permit.permitNumberUsed ||
+                      "No permit no."}
+                  </p>
+
+                  <p className="truncate text-xs text-muted-foreground">
+                    {permit.contractorName ||
+                      "Unspecified contractor"}
+                  </p>
+
+                  <p className="truncate text-xs text-muted-foreground">
+                    {permit.streetName || "No street name"}
+                  </p>
+                </div>
+
+                <div className="text-right text-xs">
+                  <p>{formatDate(permit.workEndDate)}</p>
+
+                  <p className="font-semibold">
+                    {formatNumber(
+                      permit.calculations.remainingDays
+                    )}{" "}
+                    days
+                  </p>
+                </div>
               </div>
-              <div className="text-right text-xs">
-                <p>{formatDate(permit.workEndDate)}</p>
-                <p className="font-semibold">{formatNumber(permit.calculations.remainingDays)} days</p>
-              </div>
-            </div>
-          </Link>
-        ))}
-      </div>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
