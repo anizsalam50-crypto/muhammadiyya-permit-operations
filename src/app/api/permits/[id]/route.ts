@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { calculatePermit } from "@/lib/calculations";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const permit = await prisma.permit.findUnique({ where: { id } });
