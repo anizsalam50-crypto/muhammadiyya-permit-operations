@@ -247,6 +247,7 @@ export function PermitDashboard() {
           <div>
             <p className="text-sm font-medium text-primary">MUHAMMADIYYA Permit Operations</p>
             <h1 className="mt-2 text-3xl font-semibold tracking-normal md:text-4xl">MUHAMMADIYYA Permit Operations</h1>
+            <p className="mt-1 text-sm font-semibold text-blue-600 dark:text-blue-400">Created by : ANIZ SALAM</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <input
