@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { parsePermitWorkbook } from "@/lib/excel";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -14,9 +13,11 @@ export async function POST(request: NextRequest) {
   }
 
   const buffer = await file.arrayBuffer();
-  const parsed = await parsePermitWorkbook(buffer, file.name);
 
-  if (mode === "replace") {
+const { parsePermitWorkbook } = await import("@/lib/excel");
+const parsed = await parsePermitWorkbook(buffer, file.name);
+
+if (mode === "replace") {
     await prisma.permit.deleteMany();
   }
 
