@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { buildPermitExport } from "@/lib/excel";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const permits = await prisma.permit.findMany({
     orderBy: [{ sourceRow: "asc" }, { workEndDate: "asc" }]
