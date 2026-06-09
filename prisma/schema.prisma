@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Permit {
+  id                         String   @id @default(cuid())
+  sourceSheet                String   @default("SHATEE PERMIT")
+  sourceRow                  Int?
+  workType                   String?
+  statusMuroorTasriya        String?
+  statusNormalized           String?
+  muroorPermitNo             String?
+  muroorStatusRemainingDate  String?
+  muroorStart                DateTime?
+  muroorEnd                  DateTime?
+  statusRemainLength         String?
+  workStartDate              DateTime?
+  workEndDate                DateTime?
+  permitNumberUsed           String?
+  contractorName             String?
+  lengthMeters               Float?
+  demolitionVolume           String?
+  lineNumber                 String?
+  notes                      String?
+  extensionNumber            String?
+  streetName                 String?
+  permitNumber               String?
+  permitLink                 String?
+  requestNumber              String?
+  sector                     String?
+  lineName                   String?
+  districtName               String?
+  serialNumber               Int?
+  contractNumber             String?
+  rawData                    String?
+  formulas                   String?
+  importedAt                 DateTime @default(now())
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+
+  @@index([statusMuroorTasriya])
+  @@index([statusNormalized])
+  @@index([contractorName])
+  @@index([sector])
+  @@index([workEndDate])
+  @@index([permitNumber])
+}
+
+model ImportBatch {
+  id             String   @id @default(cuid())
+  fileName       String
+  sheetName      String
+  importedRows   Int
+  formulaSummary String
+  createdAt      DateTime @default(now())
+}
