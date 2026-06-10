@@ -326,6 +326,13 @@ export function PermitDashboard() {
                 Export
               </a>
             </Button>
+
+<Button variant="outline" asChild>
+  <Link href="/admin">
+    🔐 Admin
+  </Link>
+</Button>
+
             <Button variant="secondary" onClick={() => void loadData()} disabled={loading}>
               <RefreshCw className="h-4 w-4" />
               Refresh
