@@ -138,73 +138,38 @@ function PermitDocumentLink({ permit }: { permit: PermitRow }) {
   );
 }
 
-function AlertList({
-  title,
-  items,
-  bucket
-}: {
-  title: string;
-  items: PermitRow[];
-  bucket: ExpiryBucket;
-}) {
+function AlertList({ title, items, bucket }: { title: string; items: PermitRow[]; bucket: ExpiryBucket }) {
   const [open, setOpen] = useState(false);
-
   return (
     <div className="space-y-2">
       <div
-        className="flex cursor-pointer items-center justify-between"
-        onClick={() => setOpen(!open)}
-      >
-        <p className="text-sm font-semibold">
-          {open ? "▼ " : "▶ "} {title}
-        </p>
-
-        <Badge className={badgeClass(bucket)}>
-          {items.length}
-        </Badge>
+  className="flex cursor-pointer items-center justify-between"
+  onClick={() => setOpen(!open)}
+>
+        <p className="text-sm font-semibold">{title}</p>
+        <Badge className={badgeClass(bucket)}>{items.length}</Badge>
       </div>
-
-      {open && (
-        <div className="space-y-2">
-          {items.slice(0, 5).map((permit) => (
-            <Link
-              key={permit.id}
-              href={`/permits/${permit.id}`}
-              className="block rounded-md border bg-background p-3 text-sm transition-colors hover:bg-muted/70"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="truncate font-medium">
-                    {permit.permitNumber ||
-                      permit.permitNumberUsed ||
-                      "No permit no."}
-                  </p>
-
-                  <p className="truncate text-xs text-muted-foreground">
-                    {permit.contractorName ||
-                      "Unspecified contractor"}
-                  </p>
-
-                  <p className="truncate text-xs text-muted-foreground">
-                    {permit.streetName || "No street name"}
-                  </p>
-                </div>
-
-                <div className="text-right text-xs">
-                  <p>{formatDate(permit.workEndDate)}</p>
-
-                  <p className="font-semibold">
-                    {formatNumber(
-                      permit.calculations.remainingDays
-                    )}{" "}
-                    days
-                  </p>
-                </div>
+      <div className="space-y-2">
+        {items.slice(0, 5).map((permit) => (
+          <Link
+            key={permit.id}
+            href={`/permits/${permit.id}`}
+            className="block rounded-md border bg-background p-3 text-sm transition-colors hover:bg-muted/70"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="truncate font-medium">{permit.permitNumber || permit.permitNumberUsed || "No permit no."}</p>
+                <p className="truncate text-xs text-muted-foreground">{permit.contractorName || "Unspecified contractor"}</p>
+                <p className="truncate text-xs text-muted-foreground">{permit.streetName || "No street name"}</p>
               </div>
-            </Link>
-          ))}
-        </div>
-      )}
+              <div className="text-right text-xs">
+                <p>{formatDate(permit.workEndDate)}</p>
+                <p className="font-semibold">{formatNumber(permit.calculations.remainingDays)} days</p>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }
@@ -306,10 +271,12 @@ export function PermitDashboard() {
                 if (file) void importFile(file);
               }}
             />
-            <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={importing}>
-              <Upload className="h-4 w-4" />
-              {importing ? "Importing" : "Import"}
-            </Button>
+            {/* 
+<Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={importing}>
+  <Upload className="h-4 w-4" />
+  {importing ? "Importing" : "Import"}
+</Button>
+*/}
             <Button variant="outline" asChild>
               <a href="/api/export">
                 <Download className="h-4 w-4" />
