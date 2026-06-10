@@ -186,6 +186,7 @@ export function PermitDashboard() {
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const params = useMemo(() => {
     const search = new URLSearchParams();
@@ -207,14 +208,17 @@ export function PermitDashboard() {
   }
 
   useEffect(() => {
-    const handle = window.setTimeout(() => {
-      loadData().catch((error) => {
-        setMessage(error instanceof Error ? error.message : "Unable to load permits");
-        setLoading(false);
-      });
-    }, 200);
-    return () => window.clearTimeout(handle);
-  }, [params]);
+  setIsAdmin(localStorage.getItem("isAdmin") === "true");
+
+  const handle = window.setTimeout(() => {
+    loadData().catch((error) => {
+      setMessage(error instanceof Error ? error.message : "Unable to load permits");
+      setLoading(false);
+    });
+  }, 200);
+
+  return () => window.clearTimeout(handle);
+}, [params]);
 
   async function importFile(file: File) {
     setImporting(true);
@@ -271,12 +275,16 @@ export function PermitDashboard() {
                 if (file) void importFile(file);
               }}
             />
-            {/* 
-<Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={importing}>
-  <Upload className="h-4 w-4" />
-  {importing ? "Importing" : "Import"}
-</Button>
-*/}
+            {isAdmin && (
+  <Button
+    variant="outline"
+    onClick={() => fileInputRef.current?.click()}
+    disabled={importing}
+  >
+    <Upload className="h-4 w-4" />
+    {importing ? "Importing" : "Import"}
+  </Button>
+)}
             <Button variant="outline" asChild>
               <a href="/api/export">
                 <Download className="h-4 w-4" />
