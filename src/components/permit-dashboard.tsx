@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import Lottie from "lottie-react";
+import loaderAnimation from "../loader.json";
 import {
   AlertTriangle,
   ArrowDownAZ,
@@ -222,6 +224,8 @@ export function PermitDashboard() {
   const [importing, setImporting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+const itemsPerPage = 10;
 
   const params = useMemo(() => {
     const search = new URLSearchParams();
@@ -274,6 +278,12 @@ export function PermitDashboard() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
+  const totalPages = Math.ceil(data.permits.length / itemsPerPage);
+
+const paginatedPermits = data.permits.slice(
+  (currentPage - 1) * itemsPerPage,
+  currentPage * itemsPerPage
+);
   const statCards = [
     { label: "Total Permits", value: data.dashboard.total },
     { label: "Active Permits", value: data.dashboard.active },
@@ -426,12 +436,20 @@ export function PermitDashboard() {
                 <tbody className="divide-y">
                   {loading ? (
                     <tr>
-                      <td colSpan={12} className="px-4 py-12 text-center text-muted-foreground">
-                        Loading permits
-                      </td>
+                      <td colSpan={12} className="px-4 py-12">
+  <div className="flex flex-col items-center justify-center">
+    <div className="w-24">
+      <Lottie animationData={loaderAnimation} loop />
+    </div>
+
+    <p className="mt-2 text-sm text-muted-foreground">
+      Loading permits...
+    </p>
+  </div>
+</td>
                     </tr>
                   ) : data.permits.length ? (
-                    data.permits.map((permit) => (
+                    paginatedPermits.map((permit) => (
                       <tr
                         key={permit.id}
                         className={`${rowClass(permit.calculations.expiryBucket)} cursor-pointer transition-colors hover:bg-muted`}
@@ -486,6 +504,27 @@ export function PermitDashboard() {
                   )}
                 </tbody>
               </table>
+              <div className="flex items-center justify-center gap-2 py-4">
+  <Button
+    variant="outline"
+    disabled={currentPage === 1}
+    onClick={() => setCurrentPage(currentPage - 1)}
+  >
+    Previous
+  </Button>
+
+  <span className="px-3 text-sm">
+    Page {currentPage} of {totalPages}
+  </span>
+
+  <Button
+    variant="outline"
+    disabled={currentPage === totalPages}
+    onClick={() => setCurrentPage(currentPage + 1)}
+  >
+    Next
+  </Button>
+</div>
             </div>
           </Card>
 
