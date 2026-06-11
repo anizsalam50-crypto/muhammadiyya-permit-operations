@@ -479,7 +479,7 @@ const paginatedPermits = data.permits.slice(
                         <td className="px-4 py-3 text-right">{formatNumber(permit.calculations.permitDays)}</td>
                         <td className="px-4 py-3">{permit.streetName || "-"}</td>
                         <td className="px-4 py-3">{permit.sector || "-"}</td>
-                        <<td className="w-40 px-4 py-3">
+                        <td className="w-40 px-4 py-3">
   {permit.lineNumber || permit.lineName || "-"}
 </td>
                         <td className="px-4 py-3 text-right">{formatNumber(permit.lengthMeters, 1)}</td>
