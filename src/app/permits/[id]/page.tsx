@@ -32,6 +32,15 @@ export default async function PermitDetailsPage({ params }: { params: Promise<{ 
   if (!permit) notFound();
 
   const calculated = calculatePermit(permit);
+
+  console.log(
+  "permit.muroorStatusRemainingDate =",
+  permit.muroorStatusRemainingDate
+);
+
+console.log("typeof =", typeof permit.muroorStatusRemainingDate);
+console.dir(permit.muroorStatusRemainingDate, { depth: null });
+
   const rawData = permit.rawData && typeof permit.rawData === "object" && !Array.isArray(permit.rawData) ? permit.rawData : {};
   const formulas = permit.formulas && typeof permit.formulas === "object" && !Array.isArray(permit.formulas) ? permit.formulas : {};
 
@@ -104,7 +113,7 @@ export default async function PermitDetailsPage({ params }: { params: Promise<{ 
               <Field label="Elapsed Days" value={formatNumber(calculated.calculations.expiredDays)} />
               <Field label="Muroor Start" value={formatDate(permit.muroorStart)} />
               <Field label="Muroor End" value={formatDate(permit.muroorEnd)} />
-              <Field label="Muroor Remaining" value={formatNumber(calculated.calculations.muroorRemainingDays)} />
+              <Field label="Muroor Remaining Days" value={permit.muroorStatusRemainingDate} />
             </CardContent>
           </Card>
 

@@ -18,14 +18,36 @@ function serialToDate(value: number) {
 
 function cellText(cell: ExcelJS.Cell) {
   const value = cell.value;
+
   if (value === null || value === undefined) return null;
-  if (value instanceof Date) return value.toISOString();
-  if (typeof value === "object") {
-    if ("formula" in value) return String(value.result ?? "");
-    if ("hyperlink" in value) return String(value.text ?? value.hyperlink ?? "");
-    if ("richText" in value) return value.richText.map((part) => part.text).join("");
-    if ("text" in value) return String(value.text ?? "");
+
+  if (value instanceof Date) {
+    return value.toISOString();
   }
+
+  if (typeof value === "object") {
+
+    if ("result" in value) {
+      return String(value.result ?? "");
+    }
+
+    if ("formula" in value) {
+      return String(value.result ?? "");
+    }
+
+    if ("hyperlink" in value) {
+      return String(value.text ?? value.hyperlink ?? "");
+    }
+
+    if ("richText" in value) {
+      return value.richText.map(part => part.text).join("");
+    }
+
+    if ("text" in value) {
+      return String(value.text ?? "");
+    }
+  }
+
   return String(value).trim();
 }
 
@@ -116,6 +138,8 @@ export async function parsePermitWorkbook(buffer: ArrayBuffer, fileName: string)
       }
     }
 
+    const eValue = cellText(getCell(row, "E"));
+console.log("COLUMN E VALUE =", eValue);
     permits.push({
       sourceSheet: worksheet.name,
       sourceRow: rowNumber,
@@ -123,7 +147,7 @@ export async function parsePermitWorkbook(buffer: ArrayBuffer, fileName: string)
       statusMuroorTasriya: cellText(getCell(row, "C")),
       statusNormalized: normalizeStatus(cellText(getCell(row, "C"))),
       muroorPermitNo: cellText(getCell(row, "D")),
-      muroorStatusRemainingDate: cellText(getCell(row, "E")),
+      muroorStatusRemainingDate: eValue,
       muroorStart: cellDate(getCell(row, "K")),
       muroorEnd: cellDate(getCell(row, "J")),
       statusRemainLength: cellText(getCell(row, "L")),

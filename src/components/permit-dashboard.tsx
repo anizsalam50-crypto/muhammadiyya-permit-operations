@@ -14,7 +14,9 @@ import {
   RefreshCw,
   Search,
   Upload,
-  Languages
+  Languages,
+  ShieldAlert,
+  BellRing
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -45,14 +47,20 @@ type PermitRow = {
   workEndDate: string | null;
   lengthMeters: number | null;
   notes: string | null;
+  muroorStatusRemainingDate: string | null;
   calculations: {
-    expiredDays: number | null;
-    permitDays: number | null;
-    remainingDays: number | null;
-    alertLevel: AlertLevel;
-    expiryBucket: ExpiryBucket;
-    alertText: string;
-  };
+  muroorElapsedDays: number | null;
+  muroorPermitDays: number | null;
+  muroorRemainingDays: number | null;
+
+  expiredDays: number | null;
+  permitDays: number | null;
+  remainingDays: number | null;
+
+  alertLevel: AlertLevel;
+  expiryBucket: ExpiryBucket;
+  alertText: string;
+};
 };
 
 type DashboardData = {
@@ -71,12 +79,17 @@ type ApiResponse = {
   permits: PermitRow[];
   dashboard: DashboardData;
   alerts: {
-    expired: PermitRow[];
-    within7: PermitRow[];
-    within15: PermitRow[];
-    within30: PermitRow[];
-    active: PermitRow[];
-  };
+  expired: PermitRow[];
+  within7: PermitRow[];
+  within15: PermitRow[];
+  within30: PermitRow[];
+  active: PermitRow[];
+
+  muroorExpired: PermitRow[];
+  muroorWithin7: PermitRow[];
+  muroorWithin15: PermitRow[];
+  muroorWithin30: PermitRow[];
+};
   filters: {
     statuses: string[];
     contractors: string[];
@@ -97,7 +110,18 @@ const emptyData: ApiResponse = {
     totalLengthMeters: 0,
     byStatus: []
   },
-  alerts: { expired: [], within7: [], within15: [], within30: [], active: [] },
+  alerts: {
+  expired: [],
+  within7: [],
+  within15: [],
+  within30: [],
+  active: [],
+
+  muroorExpired: [],
+  muroorWithin7: [],
+  muroorWithin15: [],
+  muroorWithin30: []
+},
   filters: { statuses: [], contractors: [], sectors: [] }
 };
 
@@ -143,11 +167,13 @@ function PermitDocumentLink({ permit }: { permit: PermitRow }) {
 function AlertList({
   title,
   items,
-  bucket
+  bucket,
+  isMuroor = false
 }: {
   title: string;
   items: PermitRow[];
   bucket: ExpiryBucket;
+  isMuroor?: boolean;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -168,7 +194,7 @@ function AlertList({
 
       {open && (
         <div className="space-y-2">
-          {items.slice(0, 5).map((permit) => (
+          {items.map((permit) => (
             <Link
               key={permit.id}
               href={`/permits/${permit.id}`}
@@ -193,15 +219,22 @@ function AlertList({
                 </div>
 
                 <div className="text-right text-xs">
-                  <p>{formatDate(permit.workEndDate)}</p>
+  {isMuroor ? (
+    <p className="font-semibold">
+      {permit.muroorStatusRemainingDate}
+    </p>
+  ) : (
+    <>
+      <p>{formatDate(permit.workEndDate)}</p>
 
-                  <p className="font-semibold">
-                    {formatNumber(
-                      permit.calculations.remainingDays
-                    )}{" "}
-                    days
-                  </p>
-                </div>
+      <p className="font-semibold">
+        {formatNumber(
+          permit.calculations.remainingDays
+        )} days
+      </p>
+    </>
+  )}
+</div>
               </div>
             </Link>
           ))}
@@ -242,6 +275,9 @@ const itemsPerPage = 10;
     setLoading(true);
     const response = await fetch(`/api/permits?${params}`);
     const payload = (await response.json()) as ApiResponse;
+
+    console.log("FIRST PERMIT =", payload.permits[0]);
+    
     setData(payload);
     setLoading(false);
   }
@@ -296,12 +332,37 @@ const paginatedPermits = data.permits.slice(
 
   return (
     <main className="min-h-screen">
-      <section className="border-b bg-card">
+      <section className="border-b bg-gradient-to-r from-slate-950 via-blue-950/40 to-slate-950">
         <div className="container flex flex-col gap-5 py-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-sm font-medium text-primary">MUHAMMADIYYA Permit Operations</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-normal md:text-4xl">MUHAMMADIYYA Permit Operations</h1>
-            <p className="mt-1 text-sm font-semibold text-blue-600 dark:text-blue-400">Created by : ANIZ SALAM</p>
+            <div className="flex items-center gap-2">
+  <span>🏢</span>
+
+  <p className="text-sm font-medium text-cyan-400">
+    MUHAMMADIYYA
+  </p>
+</div>
+
+<h1 className="mt-2 bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400 bg-clip-text text-4xl font-extrabold text-transparent md:text-5xl">
+  Permit Operations Center
+</h1>
+
+<div className="mt-4 flex flex-wrap gap-2">
+  <Badge className="border-cyan-500/20 bg-cyan-500/10 text-cyan-400">
+    Live Monitoring
+  </Badge>
+
+  <Badge className="border-orange-500/20 bg-orange-500/10 text-orange-400">
+    Muroor Tracking
+  </Badge>
+
+  <Badge className="border-emerald-500/20 bg-emerald-500/10 text-emerald-400">
+    Compliance Dashboard
+  </Badge>
+</div>
+            <p className="mt-4 text-xs uppercase tracking-[0.25em] text-cyan-500">
+  Created by ANIZ SALAM
+</p>
           </div>
           <div className="flex flex-wrap gap-2">
 
@@ -425,6 +486,7 @@ const paginatedPermits = data.permits.slice(
                     <th className="px-4 py-3">Status</th>
                     <th className="px-4 py-3">Expiry Date</th>
                     <th className="px-4 py-3 text-right">Remaining</th>
+                    <th className="px-4 py-3 text-center">Muroor Remaining Days</th>
                     <th className="px-4 py-3 text-right">Permit Days</th>
                     <th className="px-4 py-3">Street</th>
                     <th className="px-4 py-3">Sector</th>
@@ -436,7 +498,7 @@ const paginatedPermits = data.permits.slice(
                 <tbody className="divide-y">
                   {loading ? (
                     <tr>
-                      <td colSpan={12} className="px-4 py-12">
+                      <td colSpan={13} className="px-4 py-12">
   <div className="flex flex-col items-center justify-center">
     <div className="w-24">
       <Lottie animationData={loaderAnimation} loop />
@@ -474,17 +536,39 @@ const paginatedPermits = data.permits.slice(
                         <td className="px-4 py-3">{permit.statusNormalized || permit.statusMuroorTasriya || "Unspecified"}</td>
                         <td className="px-4 py-3">{formatDate(permit.workEndDate)}</td>
                         <td className="px-4 py-3 text-right font-semibold">
-                          {formatNumber(permit.calculations.remainingDays)}
-                        </td>
-                        <td className="px-4 py-3 text-right">{formatNumber(permit.calculations.permitDays)}</td>
+  {formatNumber(permit.calculations.remainingDays)}
+</td>
+
+<td className="px-4 py-3 text-center">
+  <Badge
+    className={
+      Number(permit.muroorStatusRemainingDate) <= 0
+        ? "bg-red-600 text-white"
+        : Number(permit.muroorStatusRemainingDate) <= 7
+        ? "bg-orange-500 text-white"
+        : Number(permit.muroorStatusRemainingDate) <= 15
+        ? "bg-yellow-500 text-black"
+        : "bg-green-600 text-white"
+    }
+  >
+    {permit.muroorStatusRemainingDate ?? "-"}
+  </Badge>
+</td>
+
+<td className="px-4 py-3 text-right">
+  {formatNumber(permit.calculations.permitDays)}
+</td>
                         <td className="px-4 py-3">{permit.streetName || "-"}</td>
                         <td className="px-4 py-3">{permit.sector || "-"}</td>
                         <td className="w-40 px-4 py-3">
   {permit.lineNumber || permit.lineName || "-"}
 </td>
-                        <td className="px-4 py-3 text-right">{formatNumber(permit.lengthMeters, 1)}</td>
-                        <td className="px-4 py-3">
-                          {permit.permitLink ? (
+
+<td className="px-4 py-3 text-right">
+  {formatNumber(permit.lengthMeters, 1)}
+</td>
+<td className="px-4 py-3">
+  {permit.permitLink ? (
                             <Button variant="outline" size="sm" asChild>
                               <a href={permit.permitLink} target="_blank" rel="noreferrer" onClick={(event) => event.stopPropagation()}>
                                 <FileText className="h-4 w-4" />
@@ -499,7 +583,7 @@ const paginatedPermits = data.permits.slice(
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={12} className="px-4 py-12 text-center text-muted-foreground">
+                      <td colSpan={13} className="px-4 py-12 text-center text-muted-foreground">
                         No permits found
                       </td>
                     </tr>
@@ -533,14 +617,59 @@ const paginatedPermits = data.permits.slice(
           <div className="space-y-5">
             <Card>
               <CardHeader>
-                <CardTitle>Permit Alerts</CardTitle>
-              </CardHeader>
+  <div className="rounded-md border border-emerald-500/20 bg-emerald-500/5 px-3 py-2">
+    <div className="flex items-center gap-2">
+      <BellRing className="h-4 w-4 text-emerald-500" />
+      <p className="text-sm font-bold tracking-wide text-emerald-400">
+        Permit Alerts
+      </p>
+    </div>
+  </div>
+</CardHeader>
               <CardContent className="max-h-[760px] space-y-5 overflow-y-auto permit-scrollbar">
                 <AlertList title="Expired permits" items={data.alerts.expired} bucket="expired" />
                 <AlertList title="Expiring within 7 days" items={data.alerts.within7} bucket="within7" />
                 <AlertList title="Expiring within 15 days" items={data.alerts.within15} bucket="within15" />
                 <AlertList title="Expiring within 30 days" items={data.alerts.within30} bucket="within30" />
                 <AlertList title="Active permits" items={data.alerts.active.slice(0, 5)} bucket="active" />
+                <div className="mt-6 border-t border-border/60 pt-6">
+  <div className="mb-5 flex items-center gap-2 rounded-md border border-orange-500/20 bg-orange-500/5 px-3 py-2">
+    <ShieldAlert className="h-4 w-4 text-orange-500" />
+    <p className="text-sm font-bold tracking-wide text-orange-400">
+      Muroor Alerts
+    </p>
+  </div>
+
+  <div className="space-y-4">
+    <AlertList
+      title="Expired Muroor"
+      items={data.alerts.muroorExpired}
+      bucket="expired"
+      isMuroor
+    />
+
+    <AlertList
+      title="Muroor within 7 days"
+      items={data.alerts.muroorWithin7}
+      bucket="within7"
+      isMuroor
+    />
+
+    <AlertList
+      title="Muroor within 15 days"
+      items={data.alerts.muroorWithin15}
+      bucket="within15"
+      isMuroor
+    />
+
+    <AlertList
+      title="Muroor within 30 days"
+      items={data.alerts.muroorWithin30}
+      bucket="within30"
+      isMuroor
+    />
+  </div>
+</div>
               </CardContent>
             </Card>
 

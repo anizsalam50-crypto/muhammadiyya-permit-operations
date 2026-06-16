@@ -84,13 +84,21 @@ export function normalizeStatus(status?: string | null) {
 export function calculatePermit(permit: Permit, today = new Date()): CalculatedPermit {
   const muroorStart = permit.muroorStart ?? null;
   const muroorEnd = permit.muroorEnd ?? null;
+  const muroorEndGregorian = hijriTextToGregorian(muroorEnd);
+  console.log("muroorEnd =", muroorEnd);
+console.log("muroorEndGregorian =", muroorEndGregorian);
   const workStartDate = permit.workStartDate ?? null;
   const workEndDate = permit.workEndDate ?? null;
 
   const muroorElapsedDays = daysBetween(today, muroorStart);
-  const muroorPermitDays = daysBetween(muroorEnd, muroorStart);
-  const muroorRemainingDays =
-    muroorElapsedDays === null || muroorPermitDays === null ? null : muroorPermitDays - muroorElapsedDays;
+
+const muroorPermitDays = muroorEndGregorian
+  ? daysBetween(muroorEndGregorian, muroorStart)
+  : null;
+
+const muroorRemainingDays = muroorEndGregorian
+  ? daysBetween(muroorEndGregorian, today)
+  : null;
 
   const expiredDays = daysBetween(today, workStartDate);
   const permitDays = daysBetween(workEndDate, workStartDate);
@@ -180,11 +188,41 @@ export function buildPermitAlerts(permits: CalculatedPermit[]) {
     .filter((permit) => permit.calculations.expiryBucket !== "complete")
     .sort((a, b) => (a.calculations.remainingDays ?? 999999) - (b.calculations.remainingDays ?? 999999));
 
+  const muroorPermits = permits.filter((permit) => {
+    const days = Number(permit.muroorStatusRemainingDate);
+    return !Number.isNaN(days);
+  });
+
   return {
     expired: alertable.filter((permit) => permit.calculations.expiryBucket === "expired"),
     within7: alertable.filter((permit) => permit.calculations.expiryBucket === "within7"),
     within15: alertable.filter((permit) => permit.calculations.expiryBucket === "within15"),
     within30: alertable.filter((permit) => permit.calculations.expiryBucket === "within30"),
-    active: alertable.filter((permit) => permit.calculations.expiryBucket === "active")
+    active: alertable.filter((permit) => permit.calculations.expiryBucket === "active"),
+
+    muroorExpired: muroorPermits.filter(
+      (permit) => Number(permit.muroorStatusRemainingDate) < 0
+    ),
+
+    muroorWithin7: muroorPermits.filter(
+      (permit) => {
+        const days = Number(permit.muroorStatusRemainingDate);
+        return days >= 0 && days <= 7;
+      }
+    ),
+
+    muroorWithin15: muroorPermits.filter(
+      (permit) => {
+        const days = Number(permit.muroorStatusRemainingDate);
+        return days > 7 && days <= 15;
+      }
+    ),
+
+    muroorWithin30: muroorPermits.filter(
+      (permit) => {
+        const days = Number(permit.muroorStatusRemainingDate);
+        return days > 15 && days <= 30;
+      }
+    )
   };
 }
