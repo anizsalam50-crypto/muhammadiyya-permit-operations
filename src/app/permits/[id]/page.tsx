@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { ArrowLeft, CalendarDays, ExternalLink, FileText, History, UserRound } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -17,11 +18,21 @@ function statusClass(level: string) {
   return "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200";
 }
 
-function Field({ label, value }: { label: string; value?: string | number | null }) {
+function Field({
+  label,
+  value
+}: {
+  label: string;
+  value?: ReactNode;
+}) {
   return (
     <div className="rounded-md border bg-card p-3">
-      <p className="text-xs font-medium uppercase text-muted-foreground">{label}</p>
-      <p className="mt-1 break-words text-sm font-medium">{value || "-"}</p>
+      <p className="text-xs font-medium uppercase text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-1 break-words text-sm font-medium">
+        {value || "-"}
+      </p>
     </div>
   );
 }
@@ -86,7 +97,23 @@ console.dir(permit.muroorStatusRemainingDate, { depth: null });
               <Field label="Permit Number" value={permit.permitNumber} />
               <Field label="Used Permit Number" value={permit.permitNumberUsed} />
               <Field label="Request Number" value={permit.requestNumber} />
-              <Field label="Status" value={permit.statusNormalized || permit.statusMuroorTasriya || "Unspecified"} />
+              <Field
+  label="Location"
+  value={
+    permit.statusMuroorTasriya ? (
+      <a
+        href={permit.statusMuroorTasriya}
+        target="_blank"
+        rel="noreferrer"
+        className="text-cyan-400 hover:underline"
+      >
+        📍 View Location
+      </a>
+    ) : (
+      "-"
+    )
+  }
+/>
               <Field label="Sector" value={permit.sector} />
               <Field label="District" value={permit.districtName} />
               <Field label="Street Name" value={permit.streetName} />

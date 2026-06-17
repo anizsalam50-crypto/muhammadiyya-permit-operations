@@ -293,6 +293,8 @@ sortByRemaining: "Sort by remaining days",
 
 ascending: "Ascending",
 descending: "Descending",
+location: "Location",
+viewLocation: "View Location",
   },
 
   ar: {
@@ -327,6 +329,8 @@ sortByRemaining: "ترتيب حسب الأيام المتبقية",
 
 ascending: "تصاعدي",
 descending: "تنازلي",
+location: "الموقع",
+viewLocation: "عرض الموقع",
   }
 };
 
@@ -565,7 +569,7 @@ const paginatedPermits = data.permits.slice(
                     <th className="px-4 py-3">Alert</th>
                     <th className="px-4 py-3">Permit Number</th>
                     <th className="px-4 py-3">Contractor</th>
-                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3">{t.location}</th>
                     <th className="px-4 py-3">Expiry Date</th>
                     <th className="px-4 py-3 text-right">Remaining</th>
                     <th className="px-4 py-3 text-center">Muroor Remaining Days</th>
@@ -615,7 +619,21 @@ const paginatedPermits = data.permits.slice(
                           <PermitDocumentLink permit={permit} />
                         </td>
                         <td className="px-4 py-3">{permit.contractorName || "-"}</td>
-                        <td className="px-4 py-3">{permit.statusNormalized || permit.statusMuroorTasriya || "Unspecified"}</td>
+                        <td className="px-4 py-3">
+  {permit.statusMuroorTasriya ? (
+    <a
+      href={permit.statusMuroorTasriya}
+      target="_blank"
+      rel="noreferrer"
+      onClick={(e) => e.stopPropagation()}
+      className="inline-flex items-center gap-1 text-cyan-400 hover:text-cyan-300 hover:underline"
+    >
+      📍 {t.viewLocation}
+    </a>
+  ) : (
+    "-"
+  )}
+</td>
                         <td className="px-4 py-3">{formatDate(permit.workEndDate)}</td>
                         <td className="px-4 py-3 text-right font-semibold">
   {formatNumber(permit.calculations.remainingDays)}
@@ -640,10 +658,16 @@ const paginatedPermits = data.permits.slice(
 <td className="px-4 py-3 text-right">
   {formatNumber(permit.calculations.permitDays)}
 </td>
-                        <td className="px-4 py-3">{permit.streetName || "-"}</td>
+                        <td className="px-4 py-3 max-w-[180px]">
+  <div className="truncate">
+    {permit.streetName || "-"}
+  </div>
+</td>
                         <td className="px-4 py-3">{permit.sector || "-"}</td>
-                        <td className="w-40 px-4 py-3">
-  {permit.lineNumber || permit.lineName || "-"}
+                        <td className="w-40 px-4 py-3 max-w-[180px]">
+  <div className="truncate">
+    {permit.lineNumber || permit.lineName || "-"}
+  </div>
 </td>
 
 <td className="px-4 py-3 text-right">
