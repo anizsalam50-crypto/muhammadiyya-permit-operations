@@ -258,7 +258,82 @@ export function PermitDashboard() {
   const [message, setMessage] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [language, setLanguage] = useState<"en" | "ar">("en");
 const itemsPerPage = 10;
+const translations = {
+  en: {
+    search: "Search permit, contractor, street, line",
+    totalPermits: "Total Permits",
+    activePermits: "Active Permits",
+    expiredPermits: "Expired Permits",
+    expiring7: "Expiring in 7 Days",
+    expiring15: "Expiring in 15 Days",
+    expiring30: "Expiring in 30 Days",
+    totalLength: "Total Length",
+    expiredAlert: "Expired permits",
+within7Alert: "Expiring within 7 days",
+within15Alert: "Expiring within 15 days",
+within30Alert: "Expiring within 30 days",
+activeAlert: "Active permits",
+muroorAlerts: "Muroor Alerts",
+expiredMuroor: "Expired Muroor",
+muroor7: "Muroor within 7 days",
+muroor15: "Muroor within 15 days",
+muroor30: "Muroor within 30 days",
+allPermits: "All permits",
+active: "Active",
+expired: "Expired",
+expiringSoon: "Expiring Soon",
+
+allContractors: "All contractors",
+allSectors: "All sectors",
+
+sortByExpiry: "Sort by expiry date",
+sortByRemaining: "Sort by remaining days",
+
+ascending: "Ascending",
+descending: "Descending",
+  },
+
+  ar: {
+    search: "البحث عن تصريح أو مقاول أو شارع",
+    totalPermits: "إجمالي التصاريح",
+    activePermits: "التصاريح النشطة",
+    expiredPermits: "التصاريح المنتهية",
+    expiring7: "تنتهي خلال 7 أيام",
+    expiring15: "تنتهي خلال 15 يوماً",
+    expiring30: "تنتهي خلال 30 يوماً",
+    totalLength: "إجمالي الطول",
+    expiredAlert: "التصاريح المنتهية",
+within7Alert: "تنتهي خلال 7 أيام",
+within15Alert: "تنتهي خلال 15 يوماً",
+within30Alert: "تنتهي خلال 30 يوماً",
+activeAlert: "التصاريح النشطة",
+muroorAlerts: "تنبيهات المرور",
+expiredMuroor: "تصاريح المرور المنتهية",
+muroor7: "المرور خلال 7 أيام",
+muroor15: "المرور خلال 15 يوماً",
+muroor30: "المرور خلال 30 يوماً",
+allPermits: "جميع التصاريح",
+active: "نشط",
+expired: "منتهي",
+expiringSoon: "تنتهي قريباً",
+
+allContractors: "جميع المقاولين",
+allSectors: "جميع القطاعات",
+
+sortByExpiry: "ترتيب حسب تاريخ الانتهاء",
+sortByRemaining: "ترتيب حسب الأيام المتبقية",
+
+ascending: "تصاعدي",
+descending: "تنازلي",
+  }
+};
+
+const t =
+  language === "en"
+    ? translations.en
+    : translations.ar;
 
   const params = useMemo(() => {
     const search = new URLSearchParams();
@@ -321,14 +396,14 @@ const paginatedPermits = data.permits.slice(
   currentPage * itemsPerPage
 );
   const statCards = [
-    { label: "Total Permits", value: data.dashboard.total },
-    { label: "Active Permits", value: data.dashboard.active },
-    { label: "Expired Permits", value: data.dashboard.expired },
-    { label: "Expiring in 7 Days", value: data.dashboard.expiringIn7Days },
-    { label: "Expiring in 15 Days", value: data.dashboard.expiringIn15Days },
-    { label: "Expiring in 30 Days", value: data.dashboard.expiringIn30Days },
-    { label: "Total Length", value: `${formatNumber(data.dashboard.totalLengthMeters, 1)} m` }
-  ];
+  { label: t.totalPermits, value: data.dashboard.total },
+  { label: t.activePermits, value: data.dashboard.active },
+  { label: t.expiredPermits, value: data.dashboard.expired },
+  { label: t.expiring7, value: data.dashboard.expiringIn7Days },
+  { label: t.expiring15, value: data.dashboard.expiringIn15Days },
+  { label: t.expiring30, value: data.dashboard.expiringIn30Days },
+  { label: t.totalLength, value: `${formatNumber(data.dashboard.totalLengthMeters, 1)} m` }
+];
 
   return (
     <main className="min-h-screen">
@@ -366,10 +441,15 @@ const paginatedPermits = data.permits.slice(
           </div>
           <div className="flex flex-wrap gap-2">
 
-            <Button variant="outline">
-              <Languages className="h-4 w-4" />
-              العربية
-            </Button>
+            <Button
+  variant="outline"
+  onClick={() =>
+    setLanguage(language === "en" ? "ar" : "en")
+  }
+>
+  <Languages className="h-4 w-4" />
+  {language === "en" ? "العربية" : "English"}
+</Button>
 
             <input
               ref={fileInputRef}
@@ -432,22 +512,24 @@ const paginatedPermits = data.permits.slice(
           <CardContent className="pt-5">
             <div className="grid gap-3 lg:grid-cols-[1.6fr_1fr_1fr_1fr_1fr_1fr]">
               <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Search
+  className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-cyan-400 drop-shadow-[0_0_6px_rgba(34,211,238,0.7)]" 
+/>
                 <Input
                   value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search permit, contractor, street, line"
-                  className="pl-9"
-                />
+  onChange={(event) => setQuery(event.target.value)}
+  placeholder={t.search}
+  className="pl-9 bg-white/5 backdrop-blur-sm border-cyan-500/20 hover:border-cyan-500/40 transition-all duration-300"
+/>
               </div>
               <Select value={lifecycle} onChange={(event) => setLifecycle(event.target.value)}>
-                <option value="all">All permits</option>
-                <option value="active">Active</option>
-                <option value="expired">Expired</option>
-                <option value="soon">Expiring Soon</option>
+                <option value="all">{t.allPermits}</option>
+                <option value="active">{t.active}</option>
+                <option value="expired">{t.expired}</option>
+                <option value="soon">{t.expiringSoon}</option>
               </Select>
               <Select value={contractor} onChange={(event) => setContractor(event.target.value)}>
-                <option value="all">All contractors</option>
+                <option value="all">{t.allContractors}</option>
                 {data.filters.contractors.map((item) => (
                   <option key={item} value={item}>
                     {item}
@@ -455,7 +537,7 @@ const paginatedPermits = data.permits.slice(
                 ))}
               </Select>
               <Select value={sector} onChange={(event) => setSector(event.target.value)}>
-                <option value="all">All sectors</option>
+                <option value="all">{t.allSectors}</option>
                 {data.filters.sectors.map((item) => (
                   <option key={item} value={item}>
                     {item}
@@ -463,12 +545,12 @@ const paginatedPermits = data.permits.slice(
                 ))}
               </Select>
               <Select value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
-                <option value="expiryDate">Sort by expiry date</option>
-                <option value="remainingDays">Sort by remaining days</option>
+                <option value="expiryDate">{t.sortByExpiry}</option>
+<option value="remainingDays">{t.sortByRemaining}</option>
               </Select>
               <Button variant="outline" onClick={() => setSortDir((value) => (value === "asc" ? "desc" : "asc"))}>
                 <ArrowDownAZ className="h-4 w-4" />
-                {sortDir === "asc" ? "Ascending" : "Descending"}
+                {sortDir === "asc" ? t.ascending : t.descending}
               </Button>
             </div>
           </CardContent>
@@ -627,43 +709,43 @@ const paginatedPermits = data.permits.slice(
   </div>
 </CardHeader>
               <CardContent className="max-h-[760px] space-y-5 overflow-y-auto permit-scrollbar">
-                <AlertList title="Expired permits" items={data.alerts.expired} bucket="expired" />
-                <AlertList title="Expiring within 7 days" items={data.alerts.within7} bucket="within7" />
-                <AlertList title="Expiring within 15 days" items={data.alerts.within15} bucket="within15" />
-                <AlertList title="Expiring within 30 days" items={data.alerts.within30} bucket="within30" />
-                <AlertList title="Active permits" items={data.alerts.active.slice(0, 5)} bucket="active" />
+                <AlertList title={t.expiredAlert} items={data.alerts.expired} bucket="expired" />
+                <AlertList title={t.within7Alert} items={data.alerts.within7} bucket="within7" />
+                <AlertList title={t.within15Alert} items={data.alerts.within15} bucket="within15" />
+                <AlertList title={t.within30Alert} items={data.alerts.within30} bucket="within30" />
+                <AlertList title={t.activeAlert} items={data.alerts.active.slice(0, 5)} bucket="active" />
                 <div className="mt-6 border-t border-border/60 pt-6">
   <div className="mb-5 flex items-center gap-2 rounded-md border border-orange-500/20 bg-orange-500/5 px-3 py-2">
     <ShieldAlert className="h-4 w-4 text-orange-500" />
     <p className="text-sm font-bold tracking-wide text-orange-400">
-      Muroor Alerts
-    </p>
+  {t.muroorAlerts}
+</p>
   </div>
 
   <div className="space-y-4">
     <AlertList
-      title="Expired Muroor"
+      title={t.expiredMuroor}
       items={data.alerts.muroorExpired}
       bucket="expired"
       isMuroor
     />
 
     <AlertList
-      title="Muroor within 7 days"
+      title={t.muroor7}
       items={data.alerts.muroorWithin7}
       bucket="within7"
       isMuroor
     />
 
     <AlertList
-      title="Muroor within 15 days"
+      title={t.muroor15}
       items={data.alerts.muroorWithin15}
       bucket="within15"
       isMuroor
     />
 
     <AlertList
-      title="Muroor within 30 days"
+      title={t.muroor30}
       items={data.alerts.muroorWithin30}
       bucket="within30"
       isMuroor
