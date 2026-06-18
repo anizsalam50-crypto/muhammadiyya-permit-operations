@@ -183,11 +183,29 @@ function AlertList({
         className="flex cursor-pointer items-center justify-between"
         onClick={() => setOpen(!open)}
       >
-        <p className="text-sm font-semibold">
-          {open ? "▼ " : "▶ "} {title}
-        </p>
+        <p
+  className={`text-sm font-semibold ${
+    bucket === "within7"
+      ? "text-red-400 animate-pulse drop-shadow-[0_0_12px_rgba(255,0,0,1)]"
+      : ""
+  }`}
+>
+  {open ? "▼ " : "▶ "} {title}
+</p>
 
-        <Badge className={badgeClass(bucket)}>
+        <Badge
+  className={
+    bucket === "within7"
+  ? "bg-red-600 text-white animate-pulse shadow-lg shadow-red-500/50 ring-2 ring-red-400"
+      : bucket === "expired"
+      ? "bg-red-500 text-white"
+      : bucket === "within15"
+      ? "bg-orange-500 text-white"
+      : bucket === "within30"
+      ? "bg-yellow-500 text-black"
+      : "bg-green-600 text-white"
+  }
+>
           {items.length}
         </Badge>
       </div>
@@ -295,6 +313,7 @@ ascending: "Ascending",
 descending: "Descending",
 location: "Location",
 viewLocation: "View Location",
+workStatus: "Work Status",
   },
 
   ar: {
@@ -331,6 +350,7 @@ ascending: "تصاعدي",
 descending: "تنازلي",
 location: "الموقع",
 viewLocation: "عرض الموقع",
+workStatus: "حالة العمل",
   }
 };
 
@@ -403,7 +423,11 @@ const paginatedPermits = data.permits.slice(
   { label: t.totalPermits, value: data.dashboard.total },
   { label: t.activePermits, value: data.dashboard.active },
   { label: t.expiredPermits, value: data.dashboard.expired },
-  { label: t.expiring7, value: data.dashboard.expiringIn7Days },
+  {
+  label: `🚨 ${t.expiring7}`,
+  value: data.dashboard.expiringIn7Days,
+  urgent: true
+},
   { label: t.expiring15, value: data.dashboard.expiringIn15Days },
   { label: t.expiring30, value: data.dashboard.expiringIn30Days },
   { label: t.totalLength, value: `${formatNumber(data.dashboard.totalLengthMeters, 1)} m` }
@@ -495,18 +519,50 @@ const paginatedPermits = data.permits.slice(
           </div>
         </div>
       </section>
-
       <section className="container space-y-5 py-5">
+        <div className="mx-4 mt-3 overflow-hidden rounded-xl border border-cyan-500/20 bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 shadow-[0_0_25px_rgba(34,211,238,0.15)]">
+  <div className="flex items-center gap-2 border-b border-cyan-500/20 bg-cyan-500/10 px-4 py-2 text-cyan-300">
+    <span className="animate-pulse">🔔</span>
+    <span className="font-bold tracking-wider">
+      LIVE PERMIT ALERTS
+    </span>
+  </div>
+
+  <div className="animate-marquee py-3 text-sm font-semibold text-cyan-300">
+    🚨 {data.dashboard.expiringIn15Days} Permits Expiring Within 15 Days
+    &nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;
+    ⚠️ {data.dashboard.expiringIn7Days} Critical Permits Expiring Within 7 Days
+    &nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;
+    ❌ {data.dashboard.expired} Expired Permits Need Immediate Action
+    &nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;
+    📡 Permit Monitoring System Active
+  </div>
+</div>
         {message ? <div className="rounded-md border bg-card px-4 py-3 text-sm text-muted-foreground">{message}</div> : null}
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
           {statCards.map((card) => (
-            <Card key={card.label}>
+            <Card
+  key={card.label}
+  className={
+    card.urgent
+      ? "border-red-500 shadow-lg shadow-red-500/30 animate-pulse"
+      : ""
+  }
+>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm text-muted-foreground">{card.label}</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-semibold">{card.value}</div>
+                <div
+  className={`text-2xl font-semibold ${
+    card.urgent
+      ? "text-red-500 drop-shadow-[0_0_10px_rgba(255,0,0,0.8)]"
+      : ""
+  }`}
+>
+  {card.value}
+</div>
               </CardContent>
             </Card>
           ))}
@@ -734,7 +790,7 @@ const paginatedPermits = data.permits.slice(
 </CardHeader>
               <CardContent className="max-h-[760px] space-y-5 overflow-y-auto permit-scrollbar">
                 <AlertList title={t.expiredAlert} items={data.alerts.expired} bucket="expired" />
-                <AlertList title={t.within7Alert} items={data.alerts.within7} bucket="within7" />
+                <AlertList title={`🚨 ${t.within7Alert}`} items={data.alerts.within7} bucket="within7" />
                 <AlertList title={t.within15Alert} items={data.alerts.within15} bucket="within15" />
                 <AlertList title={t.within30Alert} items={data.alerts.within30} bucket="within30" />
                 <AlertList title={t.activeAlert} items={data.alerts.active.slice(0, 5)} bucket="active" />
@@ -755,7 +811,7 @@ const paginatedPermits = data.permits.slice(
     />
 
     <AlertList
-      title={t.muroor7}
+      title={`🚨 ${t.muroor7}`}
       items={data.alerts.muroorWithin7}
       bucket="within7"
       isMuroor
@@ -781,13 +837,38 @@ const paginatedPermits = data.permits.slice(
 
             <Card>
               <CardHeader>
-                <CardTitle>Status counts</CardTitle>
+                <CardTitle>{t.workStatus}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {data.dashboard.byStatus.slice(0, 8).map((item) => (
+                {data.dashboard.byStatus
+  .filter(
+  (item) =>
+    !item.status?.startsWith("http") &&
+    item.status !== "Unspecified" &&
+    !item.status?.toLowerCase().includes("make amana") &&
+    !item.status?.toLowerCase().includes("muroor make")
+)
+  .slice(0, 8)
+  .map((item) => (
                   <div key={item.status} className="flex items-center justify-between gap-3 text-sm">
                     <span className="min-w-0 truncate">{item.status}</span>
-                    <Badge className="bg-muted text-foreground">{item.count}</Badge>
+                    <Badge
+  className={
+    item.status.toLowerCase().includes("site work complete")
+      ? "rounded-full bg-green-600 px-3 py-1 text-white shadow-lg shadow-green-500/30"
+      : item.status.includes("تم إخلا")
+      ? "rounded-full bg-emerald-600 px-3 py-1 text-white shadow-lg shadow-emerald-500/30"
+      : item.status.toLowerCase().includes("not completed")
+      ? "rounded-full bg-red-600 px-3 py-1 text-white shadow-lg shadow-red-500/40"
+      : item.status.toLowerCase().includes("some line not work")
+      ? "rounded-full bg-orange-500 px-3 py-1 text-white"
+      : item.status.includes("إلغاء")
+      ? "rounded-full bg-slate-600 px-3 py-1 text-white"
+      : "rounded-full bg-muted px-3 py-1 text-foreground"
+  }
+>
+  {item.count}
+</Badge>
                   </div>
                 ))}
               </CardContent>

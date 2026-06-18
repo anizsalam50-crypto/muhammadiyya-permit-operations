@@ -160,10 +160,16 @@ const muroorRemainingDays = muroorEndGregorian
 
 export function summarizePermits(permits: CalculatedPermit[]) {
   const byStatus = new Map<string, number>();
-  for (const permit of permits) {
-    const status = permit.statusNormalized?.trim() || normalizeStatus(permit.statusMuroorTasriya);
-    byStatus.set(status, (byStatus.get(status) ?? 0) + 1);
+
+for (const permit of permits) {
+  const status = permit.statusRemainLength?.trim();
+
+  if (!status || !isNaN(Number(status))) {
+    continue;
   }
+
+  byStatus.set(status, (byStatus.get(status) ?? 0) + 1);
+}
 
   return {
     total: permits.length,
