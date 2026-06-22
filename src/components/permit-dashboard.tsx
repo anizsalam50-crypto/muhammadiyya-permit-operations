@@ -374,8 +374,14 @@ const t =
     setLoading(true);
     const response = await fetch(`/api/permits?${params}`);
     const payload = (await response.json()) as ApiResponse;
+    console.log("DASHBOARD =", payload.dashboard);
+console.log("ACTIVE =", payload.dashboard.active);
+console.log("ACTIVE ALERTS =", payload.alerts.active.length);
 
-    console.log("FIRST PERMIT =", payload.permits[0]);
+console.log("EXPIRED DASHBOARD =", payload.dashboard.expired);
+console.log("EXPIRED ALERTS =", payload.alerts.expired.length);
+
+console.log("FIRST PERMIT =", payload.permits[0]);
     
     setData(payload);
     setLoading(false);
@@ -793,7 +799,7 @@ const paginatedPermits = data.permits.slice(
                 <AlertList title={`🚨 ${t.within7Alert}`} items={data.alerts.within7} bucket="within7" />
                 <AlertList title={t.within15Alert} items={data.alerts.within15} bucket="within15" />
                 <AlertList title={t.within30Alert} items={data.alerts.within30} bucket="within30" />
-                <AlertList title={t.activeAlert} items={data.alerts.active.slice(0, 5)} bucket="active" />
+                <AlertList title={t.activeAlert} items={data.alerts.active} bucket="active" />
                 <div className="mt-6 border-t border-border/60 pt-6">
   <div className="mb-5 flex items-center gap-2 rounded-md border border-orange-500/20 bg-orange-500/5 px-3 py-2">
     <ShieldAlert className="h-4 w-4 text-orange-500" />

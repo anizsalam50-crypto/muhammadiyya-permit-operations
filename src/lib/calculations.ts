@@ -60,8 +60,16 @@ export function hijriTextToGregorian(value?: string | number | Date | null) {
 
 function statusLooksComplete(status?: string | null) {
   if (!status) return false;
+
   const normalized = status.trim();
-  return normalized.includes("تم إخلا طرف") || normalized.includes("تم إتمام عمل") || normalized.toLowerCase().includes("complete");
+  const text = normalized.toLowerCase();
+
+  return (
+    normalized.includes("تم إخلا طرف") ||
+    normalized.includes("تم إتمام عمل") ||
+    text === "complete" ||
+    text === "site work complete"
+  );
 }
 
 export function normalizeStatus(status?: string | null) {
@@ -85,8 +93,6 @@ export function calculatePermit(permit: Permit, today = new Date()): CalculatedP
   const muroorStart = permit.muroorStart ?? null;
   const muroorEnd = permit.muroorEnd ?? null;
   const muroorEndGregorian = hijriTextToGregorian(muroorEnd);
-  console.log("muroorEnd =", muroorEnd);
-console.log("muroorEndGregorian =", muroorEndGregorian);
   const workStartDate = permit.workStartDate ?? null;
   const workEndDate = permit.workEndDate ?? null;
 
@@ -105,37 +111,69 @@ const muroorRemainingDays = muroorEndGregorian
   const remainingDays = expiredDays === null || permitDays === null ? null : permitDays - expiredDays;
 
   const complete = statusLooksComplete(permit.statusMuroorTasriya) || statusLooksComplete(permit.statusRemainLength);
-  let alertLevel: CalculatedPermit["calculations"]["alertLevel"] = "normal";
-  let expiryBucket: CalculatedPermit["calculations"]["expiryBucket"] = "active";
-  let alertText = "On track";
+  const statusText = String(permit.statusRemainLength ?? "");
 
-  if (complete) {
-    alertLevel = "complete";
-    expiryBucket = "complete";
-    alertText = "Complete";
-  } else if (remainingDays !== null && remainingDays < 0) {
-    alertLevel = "expired";
-    expiryBucket = "expired";
-    alertText = `${Math.abs(remainingDays)} days overdue`;
-  } else if (remainingDays !== null && remainingDays <= 7) {
-    alertLevel = "critical";
-    expiryBucket = "within7";
-    alertText = `${remainingDays} days remaining`;
-  } else if (remainingDays !== null && remainingDays <= 15) {
-    alertLevel = "soon";
-    expiryBucket = "within15";
-    alertText = `${remainingDays} days remaining`;
-  } else if (remainingDays !== null && remainingDays <= 30) {
-    alertLevel = "warning";
-    expiryBucket = "within30";
-    alertText = `${remainingDays} days remaining`;
-  } else if (remainingDays !== null) {
-    alertText = `${remainingDays} days remaining`;
+
+const isCancelled =
+  statusText.includes("تم طلب") ||
+  statusText.includes("الغاء") ||
+  statusText.includes("إلغاء");
+
+
+let alertLevel: CalculatedPermit["calculations"]["alertLevel"] = "normal";
+let expiryBucket: CalculatedPermit["calculations"]["expiryBucket"] = "active";
+let alertText = "On track";
+
+if (
+  remainingDays !== null &&
+  remainingDays < 0 &&
+  !complete
+) {
+
+  alertLevel = "expired";
+  expiryBucket = "expired";
+  alertText = `${Math.abs(remainingDays)} days overdue`;
+
+
+} else if (complete || isCancelled) {
+
+  alertLevel = "complete";
+  expiryBucket = "complete";
+
+  if (isCancelled) {
+    alertText = "Cancellation Requested";
   } else {
-    expiryBucket = "unknown";
-    alertText = "Missing dates";
+    alertText = "Complete";
   }
 
+} else if (remainingDays !== null && remainingDays <= 7) {
+
+  alertLevel = "critical";
+  expiryBucket = "within7";
+  alertText = `${remainingDays} days remaining`;
+
+} else if (remainingDays !== null && remainingDays <= 15) {
+
+  alertLevel = "soon";
+  expiryBucket = "within15";
+  alertText = `${remainingDays} days remaining`;
+
+} else if (remainingDays !== null && remainingDays <= 30) {
+
+  alertLevel = "warning";
+  expiryBucket = "within30";
+  alertText = `${remainingDays} days remaining`;
+
+} else if (remainingDays !== null) {
+
+  alertText = `${remainingDays} days remaining`;
+
+} else {
+
+  expiryBucket = "unknown";
+  alertText = "Missing dates";
+
+}
   return {
     ...permit,
     statusNormalized: permit.statusNormalized ?? normalizeStatus(permit.statusMuroorTasriya),
@@ -170,16 +208,25 @@ for (const permit of permits) {
 
   byStatus.set(status, (byStatus.get(status) ?? 0) + 1);
 }
+return {
+  total: permits.length,
 
-  return {
-    total: permits.length,
-    active: permits.filter((permit) => permit.calculations.alertLevel === "normal").length,
-    expiringSoon: permits.filter((permit) => ["critical", "soon", "warning"].includes(permit.calculations.alertLevel)).length,
+  active: permits.filter(
+  (permit) =>
+    permit.calculations.expiryBucket !== "expired" &&
+    permit.calculations.expiryBucket !== "complete"
+).length,
+
+  expiringSoon: permits.filter(
+    (permit) => ["critical", "soon", "warning"].includes(permit.calculations.alertLevel)
+  ).length,
     expiringIn7Days: permits.filter((permit) => permit.calculations.expiryBucket === "within7").length,
     expiringIn15Days: permits.filter((permit) => ["within7", "within15"].includes(permit.calculations.expiryBucket)).length,
     expiringIn30Days: permits.filter((permit) =>
       ["within7", "within15", "within30"].includes(permit.calculations.expiryBucket)
     ).length,
+    
+    
     expired: permits.filter((permit) => permit.calculations.alertLevel === "expired").length,
     complete: permits.filter((permit) => permit.calculations.alertLevel === "complete").length,
     totalLengthMeters: permits.reduce((sum, permit) => sum + (permit.lengthMeters ?? 0), 0),
@@ -198,13 +245,27 @@ export function buildPermitAlerts(permits: CalculatedPermit[]) {
     const days = Number(permit.muroorStatusRemainingDate);
     return !Number.isNaN(days);
   });
-
+console.log(
+  "EXPIRED LIST",
+  permits
+    .filter((permit) => permit.calculations.alertLevel === "expired")
+    .map((permit) => ({
+      permit: permit.permitNumber,
+      muroor: permit.muroorStatusRemainingDate,
+      remaining: permit.calculations.remainingDays,
+      status: permit.statusRemainLength,
+    }))
+);
   return {
     expired: alertable.filter((permit) => permit.calculations.expiryBucket === "expired"),
     within7: alertable.filter((permit) => permit.calculations.expiryBucket === "within7"),
     within15: alertable.filter((permit) => permit.calculations.expiryBucket === "within15"),
     within30: alertable.filter((permit) => permit.calculations.expiryBucket === "within30"),
-    active: alertable.filter((permit) => permit.calculations.expiryBucket === "active"),
+    active: alertable.filter(
+  (permit) =>
+    permit.calculations.expiryBucket !== "expired" &&
+    permit.calculations.expiryBucket !== "complete"
+),
 
     muroorExpired: muroorPermits.filter(
       (permit) => Number(permit.muroorStatusRemainingDate) < 0
