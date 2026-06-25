@@ -139,7 +139,13 @@ export async function parsePermitWorkbook(buffer: ArrayBuffer, fileName: string)
     }
 
     const eValue = cellText(getCell(row, "E"));
-console.log("COLUMN E VALUE =", eValue);
+
+console.log(
+  "PERMIT",
+  cellText(getCell(row, "Z")),
+  "COLUMN E =",
+  eValue
+);
     permits.push({
       sourceSheet: worksheet.name,
       sourceRow: rowNumber,

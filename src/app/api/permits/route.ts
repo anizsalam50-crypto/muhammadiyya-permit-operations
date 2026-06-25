@@ -61,6 +61,11 @@ export async function GET(request: NextRequest) {
     });
   }
 
+  const lastImport = await prisma.importBatch.findFirst({
+  orderBy: {
+    createdAt: "desc",
+  },
+});
   const allPermits = (await prisma.permit.findMany()).map((permit) => calculatePermit(permit));
   const filters = {
     statuses: [...new Set(allPermits.map((permit) => permit.statusNormalized).filter(Boolean))].sort(),
@@ -69,10 +74,11 @@ export async function GET(request: NextRequest) {
   };
 
   return NextResponse.json({
-    permits: calculated,
-    dashboard: summarizePermits(allPermits),
-    alerts: buildPermitAlerts(allPermits),
-    filters,
-    formulas: FORMULA_CATALOG
-  });
+  permits: calculated,
+  dashboard: summarizePermits(allPermits),
+  alerts: buildPermitAlerts(allPermits),
+  filters,
+  formulas: FORMULA_CATALOG,
+  lastUpdated: lastImport?.createdAt ?? null
+});
 }

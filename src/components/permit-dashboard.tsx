@@ -95,6 +95,7 @@ type ApiResponse = {
     contractors: string[];
     sectors: string[];
   };
+  lastUpdated: string | null;
 };
 
 const emptyData: ApiResponse = {
@@ -111,18 +112,22 @@ const emptyData: ApiResponse = {
     byStatus: []
   },
   alerts: {
-  expired: [],
-  within7: [],
-  within15: [],
-  within30: [],
-  active: [],
-
-  muroorExpired: [],
-  muroorWithin7: [],
-  muroorWithin15: [],
-  muroorWithin30: []
-},
-  filters: { statuses: [], contractors: [], sectors: [] }
+    expired: [],
+    within7: [],
+    within15: [],
+    within30: [],
+    active: [],
+    muroorExpired: [],
+    muroorWithin7: [],
+    muroorWithin15: [],
+    muroorWithin30: []
+  },
+  filters: {
+    statuses: [],
+    contractors: [],
+    sectors: []
+  },
+  lastUpdated: null
 };
 
 function badgeClass(level: AlertLevel | ExpiryBucket) {
@@ -274,10 +279,13 @@ export function PermitDashboard() {
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [language, setLanguage] = useState<"en" | "ar">("en");
 const itemsPerPage = 10;
+const AUTO_REFRESH_SECONDS = 120;
+const [refreshCountdown, setRefreshCountdown] = useState(AUTO_REFRESH_SECONDS);
 const translations = {
   en: {
     search: "Search permit, contractor, street, line",
@@ -384,7 +392,14 @@ console.log("EXPIRED ALERTS =", payload.alerts.expired.length);
 console.log("FIRST PERMIT =", payload.permits[0]);
     
     setData(payload);
-    setLoading(false);
+
+setLastUpdated(
+  payload.lastUpdated
+    ? new Date(payload.lastUpdated).toLocaleString()
+    : "Never"
+);
+
+setLoading(false);
   }
 
   useEffect(() => {
@@ -399,6 +414,26 @@ console.log("FIRST PERMIT =", payload.permits[0]);
 
   return () => window.clearTimeout(handle);
 }, [params]);
+useEffect(() => {
+  const interval = setInterval(() => {
+    loadData();
+    setRefreshCountdown(AUTO_REFRESH_SECONDS);
+  }, AUTO_REFRESH_SECONDS * 1000);
+
+  return () => clearInterval(interval);
+}, [params]);
+useEffect(() => {
+  const countdown = setInterval(() => {
+    setRefreshCountdown((prev) => {
+      if (prev <= 1) {
+        return AUTO_REFRESH_SECONDS;
+      }
+      return prev - 1;
+    });
+  }, 1000);
+
+  return () => clearInterval(countdown);
+}, []);
 
   async function importFile(file: File) {
     setImporting(true);
@@ -527,13 +562,28 @@ const paginatedPermits = data.permits.slice(
       </section>
       <section className="container space-y-5 py-5">
         <div className="mx-4 mt-3 overflow-hidden rounded-xl border border-cyan-500/20 bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 shadow-[0_0_25px_rgba(34,211,238,0.15)]">
-  <div className="flex items-center gap-2 border-b border-cyan-500/20 bg-cyan-500/10 px-4 py-2 text-cyan-300">
-    <span className="animate-pulse">🔔</span>
-    <span className="font-bold tracking-wider">
-      LIVE PERMIT ALERTS
-    </span>
-  </div>
 
+  {/* Header */}
+  <div className="flex items-center justify-between border-b border-cyan-500/20 bg-cyan-500/10 px-4 py-2">
+    <div className="flex items-center gap-3">
+      <span className="animate-pulse">🔔</span>
+
+      <span className="font-bold tracking-wider text-cyan-300">
+        LIVE PERMIT ALERTS
+      </span>
+
+      <span className="text-xs text-cyan-400">
+        📅 Last Updated: {lastUpdated}
+      </span>
+    </div>
+
+    <div className="flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400">
+    <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400"></span>
+    🔄 Refresh in {refreshCountdown}s
+  </div>
+</div>
+
+  {/* Marquee */}
   <div className="animate-marquee py-3 text-sm font-semibold text-cyan-300">
     🚨 {data.dashboard.expiringIn15Days} Permits Expiring Within 15 Days
     &nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;
@@ -543,6 +593,7 @@ const paginatedPermits = data.permits.slice(
     &nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;
     📡 Permit Monitoring System Active
   </div>
+
 </div>
         {message ? <div className="rounded-md border bg-card px-4 py-3 text-sm text-muted-foreground">{message}</div> : null}
 
